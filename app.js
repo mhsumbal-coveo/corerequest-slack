@@ -36,112 +36,64 @@ async function getAccountIdByEmail(email) {
   }
 }
 
+// Function to get available Epics from Jira
+async function getEpics() {
+  try {
+    const epicIssues = await jira.issueSearch.searchForIssuesUsingJql({
+      jql: 'issuetype = Epic AND project = "KAN"', // Adjust the project key as needed
+      fields: ['summary', 'key'], // Only fetch the summary and key fields
+    });
+
+    return epicIssues.issues.map(epic => ({
+      text: {
+        type: 'plain_text',
+        text: epic.fields.summary
+      },
+      value: epic.key
+    }));
+  } catch (error) {
+    console.error(`Failed to fetch Epics: ${error.message}`);
+    return [];
+  }
+}
+
+
+
 // Listen for the `/CoreRequest` command
-app.command('/corerequest', async ({ command, ack, client, logger, body }) => {
+app.command('/corerequest', async ({ command, ack, client, logger }) => {
   // Acknowledge the command request
   await ack();
   try {
+    const epicOptions = await getEpics();
     // Call views.open with the built-in client
     await client.views.open({
+      
         trigger_id: command.trigger_id,
         view: {
           type: 'modal',
-          callback_id: 'create_jira_ticket',
+          callback_id: 'select_request_type',
           title: {
             type: 'plain_text',
-            text: 'Create Jira Ticket'
+            text: 'Core Team Request'
           },
           blocks: [
             {
               type: 'input',
-              block_id: 'summary',
-              element: {
-                type: 'plain_text_input',
-                action_id: 'summary_input'
-              },
-              label: {
-                type: 'plain_text',
-                text: 'Summary'
-              }
-            },
-            {
-              type: 'input',
-              block_id: 'description',
-              element: {
-                type: 'plain_text_input',
-                action_id: 'description_input',
-                multiline: true
-              },
-              label: {
-                type: 'plain_text',
-                text: 'Description'
-              }
-            },
-            {
-              type: 'input',
-              block_id: 'priority',
+              block_id: 'request_type',
               element: {
                 type: 'static_select',
-                action_id: 'priority_input',
-                options: [
-                  {
-                    text: {
-                      type: 'plain_text',
-                      text: 'Highest'
-                    },
-                    value: 'Highest'
-                  },
-                  {
-                    text: {
-                      type: 'plain_text',
-                      text: 'High'
-                    },
-                    value: 'High'
-                  },
-                  {
-                    text: {
-                      type: 'plain_text',
-                      text: 'Medium'
-                    },
-                    value: 'Medium'
-                  },
-                  {
-                    text: {
-                      type: 'plain_text',
-                      text: 'Low'
-                    },
-                    value: 'Low'
-                  },
-                  {
-                    text: {
-                      type: 'plain_text',
-                      text: 'Lowest'
-                    },
-                    value: 'Lowest'
-                  }
-                ]
+                action_id: 'request_type_select',
+                options: epicOptions
               },
               label: {
                 type: 'plain_text',
-                text: 'Priority'
-              }
-            },
-            {
-              type: 'input',
-              block_id: 'assignee',
-              element: {
-                type: 'plain_text_input',
-                action_id: 'assignee_input'
-              },
-              label: {
-                type: 'plain_text',
-                text: 'Assignee (Jira Email)'
+                text: 'What type of request is it?'
               }
             }
           ],
           submit: {
             type: 'plain_text',
-            text: 'Submit'
+            text: 'Next'
           }
         }
       });
@@ -150,6 +102,139 @@ app.command('/corerequest', async ({ command, ack, client, logger, body }) => {
   }
   
 });
+
+// Handle view_submission event for the request type selection
+app.view('select_request_type', async ({ ack, body, view, client }) => {
+  // Acknowledge the view_submission event
+
+  const requestType = view.state.values.request_type.request_type_select.selected_option.value;
+  const requestTypeText = view.state.values.request_type.request_type_select.selected_option.text.text;
+  await ack();
+
+/*   console.log(requestTypeText); */
+
+  // Render the rest of the form based on the selected request type
+  try {
+    await client.views.open({
+      trigger_id: body.trigger_id,
+      view_id: view.id,
+      view: {
+        type: 'modal',
+        callback_id: 'create_jira_ticket',
+        title: {
+          type: 'plain_text',
+          text: 'Core Team Request'
+        },
+        blocks: [
+          {
+            "type": "section",
+            "fields": [
+              {
+                "type": "mrkdwn",
+                "text": `*${requestTypeText}*`,
+              }
+            ]
+          },
+          {
+            type: 'input',
+            block_id: 'summary',
+            element: {
+              type: 'plain_text_input',
+              action_id: 'summary_input'
+            },
+            label: {
+              type: 'plain_text',
+              text: `Summary`
+            }
+          },
+          {
+            type: 'input',
+            block_id: 'description',
+            element: {
+              type: 'plain_text_input',
+              action_id: 'description_input',
+              multiline: true
+            },
+            label: {
+              type: 'plain_text',
+              text: 'Description'
+            }
+          },
+          {
+            type: 'input',
+            block_id: 'priority',
+            element: {
+              type: 'static_select',
+              action_id: 'priority_input',
+              options: [
+                {
+                  text: {
+                    type: 'plain_text',
+                    text: 'Highest'
+                  },
+                  value: 'Highest'
+                },
+                {
+                  text: {
+                    type: 'plain_text',
+                    text: 'High'
+                  },
+                  value: 'High'
+                },
+                {
+                  text: {
+                    type: 'plain_text',
+                    text: 'Medium'
+                  },
+                  value: 'Medium'
+                },
+                {
+                  text: {
+                    type: 'plain_text',
+                    text: 'Low'
+                  },
+                  value: 'Low'
+                },
+                {
+                  text: {
+                    type: 'plain_text',
+                    text: 'Lowest'
+                  },
+                  value: 'Lowest'
+                }
+              ]
+            },
+            label: {
+              type: 'plain_text',
+              text: 'Priority'
+            }
+          },
+          {
+            type: 'input',
+            block_id: 'assignee',
+            element: {
+              type: 'plain_text_input',
+              action_id: 'assignee_input'
+            },
+            label: {
+              type: 'plain_text',
+              text: 'Assignee (Jira Email)'
+            }
+          }
+        ],
+        private_metadata: requestType, // Store the selected Epic key
+        submit: {
+          type: 'plain_text',
+          text: 'Submit'
+        }
+      }
+    });
+  } catch (error) {
+    console.error(error);
+  }
+});
+
+
 
 // Handle view_submission event for the modal
 app.view('create_jira_ticket', async ({ ack, body, view, client }) => {
@@ -160,7 +245,7 @@ app.view('create_jira_ticket', async ({ ack, body, view, client }) => {
   const description = view.state.values.description.description_input.value;
   const priority = view.state.values.priority.priority_input.selected_option.value;
   const assigneeEmail = view.state.values.assignee.assignee_input.value;
-
+  const epicKey = view.private_metadata; // Retrieve the stored Epic key
   try {
     // Get the accountId for the assignee
     const assigneeAccountId = await getAccountIdByEmail(assigneeEmail);
@@ -180,7 +265,10 @@ app.view('create_jira_ticket', async ({ ack, body, view, client }) => {
         },
         assignee: {
           id: assigneeAccountId // Use accountId to assign the ticket
-        }
+        },
+        parent: {
+          key: epicKey
+        } 
       }
     });
 
@@ -198,6 +286,7 @@ app.view('create_jira_ticket', async ({ ack, body, view, client }) => {
     });
   }
 });
+
 
 // Start your app
 (async () => {
