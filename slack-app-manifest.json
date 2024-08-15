@@ -1,0 +1,38 @@
+{
+    "display_information": {
+        "name": "CoreRequest"
+    },
+    "features": {
+        "bot_user": {
+            "display_name": "CoreRequest",
+            "always_online": false
+        },
+        "slash_commands": [
+            {
+                "command": "/corerequest",
+                "url": "https://corerequest-slack.onrender.com/slack/events",
+                "description": "launch",
+                "should_escape": false
+            }
+        ]
+    },
+    "oauth_config": {
+        "scopes": {
+            "bot": [
+                "commands",
+                "chat:write",
+                "im:history",
+                "users:read"
+            ]
+        }
+    },
+    "settings": {
+        "interactivity": {
+            "is_enabled": true,
+            "request_url": "https://corerequest-slack.onrender.com/slack/events"
+        },
+        "org_deploy_enabled": false,
+        "socket_mode_enabled": false,
+        "token_rotation_enabled": false
+    }
+}
