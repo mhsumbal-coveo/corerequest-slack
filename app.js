@@ -110,8 +110,6 @@ app.view('select_request_type', async ({ ack, body, view, client }) => {
   const requestTypeText = view.state.values.request_type.request_type_select.selected_option.text.text;
   await ack();
 
-/*   console.log(requestTypeText); */
-
   // Render the rest of the form based on the selected request type
   try {
     await client.views.open({
@@ -210,6 +208,55 @@ app.view('select_request_type', async ({ ack, body, view, client }) => {
           },
           {
             type: 'input',
+            block_id: 'label',
+            element: {
+              type: 'static_select',
+              action_id: 'label_input',
+              options: [
+                {
+                  text: {
+                    type: 'plain_text',
+                    text: 'Bug'
+                  },
+                  value: 'Bug'
+                },
+                {
+                  text: {
+                    type: 'plain_text',
+                    text: 'Question'
+                  },
+                  value: 'Question'
+                },
+                {
+                  text: {
+                    type: 'plain_text',
+                    text: 'Feature'
+                  },
+                  value: 'Feature'
+                },
+                {
+                  text: {
+                    type: 'plain_text',
+                    text: 'Task'
+                  },
+                  value: 'Task'
+                },
+                {
+                  text: {
+                    type: 'plain_text',
+                    text: 'New Demo'
+                  },
+                  value: 'New Demo'
+                }
+              ]
+            },
+            label: {
+              type: 'plain_text',
+              text: 'Label'
+            }
+          },
+          {
+            type: 'input',
             block_id: 'assignee',
             element: {
               type: 'plain_text_input',
@@ -242,6 +289,7 @@ app.view('create_jira_ticket', async ({ ack, body, view, client }) => {
   const description = view.state.values.description.description_input.value;
   const priority = view.state.values.priority.priority_input.selected_option.value;
   const assigneeEmail = view.state.values.assignee.assignee_input.value;
+  const label = view.state.values.label.label_input.selected_option.value;
   const epicKey = view.private_metadata; // Retrieve the stored Epic key
   try {
     // Get the accountId for the assignee
@@ -265,7 +313,8 @@ app.view('create_jira_ticket', async ({ ack, body, view, client }) => {
         },
         parent: {
           key: epicKey
-        } 
+        },
+        labels: [label] // Include the selected label
       }
     });
 

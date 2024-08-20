@@ -10,7 +10,7 @@
         "slash_commands": [
             {
                 "command": "/corerequest",
-                "url": "https://corerequest-slack.onrender.com/slack/events",
+                "url": "http://18.204.88.116:3000/slack/events",
                 "description": "launch",
                 "should_escape": false
             }
@@ -29,7 +29,7 @@
     "settings": {
         "interactivity": {
             "is_enabled": true,
-            "request_url": "https://corerequest-slack.onrender.com/slack/events"
+            "request_url": "http://18.204.88.116:3000/slack/events"
         },
         "org_deploy_enabled": false,
         "socket_mode_enabled": false,
