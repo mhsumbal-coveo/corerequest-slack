@@ -298,7 +298,7 @@ app.view('create_jira_ticket', async ({ ack, body, view, client }) => {
   console.log('⚡️ Bolt app is running!');
   
   // Start the Express server
-  expressApp.listen(80, () => {
+  expressApp.listen(8080, () => {
     console.log('Express server is running on port 3001');
   });
 })();
