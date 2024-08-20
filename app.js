@@ -1,5 +1,6 @@
 const { App } = require('@slack/bolt');
 const { Version3Client } = require('jira.js');
+const express = require('express'); // Import Express
 require('dotenv').config();
 
 const jiraEmail = "hamzasumbal@gmail.com"; // Your Atlassian account email
@@ -20,6 +21,14 @@ const jira = new Version3Client({
             apiToken: jiraApiToken,
         },
     },
+});
+
+// Initialize Express server
+const expressApp = express();
+
+// Add a GET route to test if the server is running
+expressApp.get('/health', (req, res) => {
+    res.send('Server is running!');
 });
 
 // Function to get accountId from email
@@ -56,8 +65,6 @@ async function getEpics() {
     return [];
   }
 }
-
-
 
 // Listen for the `/CoreRequest` command
 app.command('/corerequest', async ({ command, ack, client, logger }) => {
@@ -234,8 +241,6 @@ app.view('select_request_type', async ({ ack, body, view, client }) => {
   }
 });
 
-
-
 // Handle view_submission event for the modal
 app.view('create_jira_ticket', async ({ ack, body, view, client }) => {
   // Acknowledge the view_submission event
@@ -287,9 +292,13 @@ app.view('create_jira_ticket', async ({ ack, body, view, client }) => {
   }
 });
 
-
 // Start your app
 (async () => {
   await app.start(process.env.PORT || 3000);
   console.log('⚡️ Bolt app is running!');
+  
+  // Start the Express server
+  expressApp.listen(3001, () => {
+    console.log('Express server is running on port 3001');
+  });
 })();
