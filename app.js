@@ -23,14 +23,6 @@ const jira = new Version3Client({
     },
 });
 
-// Initialize Express server
-const expressApp = express();
-
-// Add a GET route to test if the server is running
-expressApp.get('/health', (req, res) => {
-    res.send('Server is running!');
-});
-
 // Function to get accountId from email
 async function getAccountIdByEmail(email) {
   try {
@@ -296,9 +288,4 @@ app.view('create_jira_ticket', async ({ ack, body, view, client }) => {
 (async () => {
   await app.start(process.env.PORT || 3000);
   console.log('⚡️ Bolt app is running!');
-  
-  // Start the Express server
-  expressApp.listen(8080, () => {
-    console.log('Express server is running on port 3001');
-  });
 })();
