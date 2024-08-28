@@ -3,6 +3,8 @@ const { Version3Client } = require('jira.js');
 const express = require('express'); // Import Express
 require('dotenv').config();
 
+const {defaultRequest} = require('./views/defaultRequest');
+
 const jiraEmail = "hamzasumbal@gmail.com"; // Your Atlassian account email
 const jiraApiToken = process.env.JIRA_API_TOKEN; // The API token you generated
 
@@ -112,169 +114,7 @@ app.view('select_request_type', async ({ ack, body, view, client }) => {
 
   // Render the rest of the form based on the selected request type
   try {
-    await client.views.open({
-      trigger_id: body.trigger_id,
-      view_id: view.id,
-      view: {
-        type: 'modal',
-        callback_id: 'create_jira_ticket',
-        title: {
-          type: 'plain_text',
-          text: 'Core Team Request'
-        },
-        blocks: [
-          {
-            "type": "section",
-            "fields": [
-              {
-                "type": "mrkdwn",
-                "text": `*${requestTypeText}*`,
-              }
-            ]
-          },
-          {
-            type: 'input',
-            block_id: 'summary',
-            element: {
-              type: 'plain_text_input',
-              action_id: 'summary_input'
-            },
-            label: {
-              type: 'plain_text',
-              text: `Summary`
-            }
-          },
-          {
-            type: 'input',
-            block_id: 'description',
-            element: {
-              type: 'plain_text_input',
-              action_id: 'description_input',
-              multiline: true
-            },
-            label: {
-              type: 'plain_text',
-              text: 'Description'
-            }
-          },
-          {
-            type: 'input',
-            block_id: 'priority',
-            element: {
-              type: 'static_select',
-              action_id: 'priority_input',
-              options: [
-                {
-                  text: {
-                    type: 'plain_text',
-                    text: 'Highest'
-                  },
-                  value: 'Highest'
-                },
-                {
-                  text: {
-                    type: 'plain_text',
-                    text: 'High'
-                  },
-                  value: 'High'
-                },
-                {
-                  text: {
-                    type: 'plain_text',
-                    text: 'Medium'
-                  },
-                  value: 'Medium'
-                },
-                {
-                  text: {
-                    type: 'plain_text',
-                    text: 'Low'
-                  },
-                  value: 'Low'
-                },
-                {
-                  text: {
-                    type: 'plain_text',
-                    text: 'Lowest'
-                  },
-                  value: 'Lowest'
-                }
-              ]
-            },
-            label: {
-              type: 'plain_text',
-              text: 'Priority'
-            }
-          },
-          {
-            type: 'input',
-            block_id: 'label',
-            element: {
-              type: 'static_select',
-              action_id: 'label_input',
-              options: [
-                {
-                  text: {
-                    type: 'plain_text',
-                    text: 'Bug'
-                  },
-                  value: 'Bug'
-                },
-                {
-                  text: {
-                    type: 'plain_text',
-                    text: 'Question'
-                  },
-                  value: 'Question'
-                },
-                {
-                  text: {
-                    type: 'plain_text',
-                    text: 'Feature'
-                  },
-                  value: 'Feature'
-                },
-                {
-                  text: {
-                    type: 'plain_text',
-                    text: 'Task'
-                  },
-                  value: 'Task'
-                },
-                {
-                  text: {
-                    type: 'plain_text',
-                    text: 'New Demo'
-                  },
-                  value: 'New Demo'
-                }
-              ]
-            },
-            label: {
-              type: 'plain_text',
-              text: 'Label'
-            }
-          },
-          {
-            type: 'input',
-            block_id: 'assignee',
-            element: {
-              type: 'plain_text_input',
-              action_id: 'assignee_input'
-            },
-            label: {
-              type: 'plain_text',
-              text: 'Assignee (Jira Email)'
-            }
-          }
-        ],
-        private_metadata: requestType, // Store the selected Epic key
-        submit: {
-          type: 'plain_text',
-          text: 'Submit'
-        }
-      }
-    });
+    await client.views.open(defaultRequest(body,view,requestType, requestTypeText));
   } catch (error) {
     console.error(error);
   }
@@ -285,38 +125,54 @@ app.view('create_jira_ticket', async ({ ack, body, view, client }) => {
   // Acknowledge the view_submission event
   await ack();
 
-  const summary = view.state.values.summary.summary_input.value;
-  const description = view.state.values.description.description_input.value;
-  const priority = view.state.values.priority.priority_input.selected_option.value;
-  const assigneeEmail = view.state.values.assignee.assignee_input.value;
-  const label = view.state.values.label.label_input.selected_option.value;
+  // Retrieve the values and handle missing fields by setting default values or handling undefined values
+  const summary = view.state.values.summary?.summary_input?.value || 'No summary provided';
+  const description = view.state.values.description?.description_input?.value || 'No description provided';
+  const priority = view.state.values.priority?.priority_input?.selected_option?.value || 'Medium';
+  const assigneeEmail = view.state.values.assignee?.assignee_input?.value;
+  const label = view.state.values.label?.label_input?.selected_option?.value || 'Task';
+  const dueDate = view.state.values.due_date?.due_date_input?.selected_date; // Optional due date
   const epicKey = view.private_metadata; // Retrieve the stored Epic key
-  try {
-    // Get the accountId for the assignee
-    const assigneeAccountId = await getAccountIdByEmail(assigneeEmail);
 
-    const issue = await jira.issues.createIssue({
-      fields: {
-        project: {
-          key: 'KAN'
-        },
-        summary: summary,
-        description: description,
-        issuetype: {
-          name: 'Task'
-        },
-        priority: {
-          name: priority.charAt(0).toUpperCase() + priority.slice(1)
-        },
-        assignee: {
-          id: assigneeAccountId // Use accountId to assign the ticket
-        },
-        parent: {
-          key: epicKey
-        },
-        labels: [label] // Include the selected label
+  try {
+    let assigneeAccountId = null;
+
+    // Get the accountId for the assignee if the email is provided
+    if (assigneeEmail) {
+      assigneeAccountId = await getAccountIdByEmail(assigneeEmail);
+    }
+
+    const issueFields = {
+      project: {
+        key: 'KAN'
+      },
+      summary: summary,
+      description: description,
+      issuetype: {
+        name: 'Task'
+      },
+      priority: {
+        name: priority.charAt(0).toUpperCase() + priority.slice(1)
+      },
+      labels: [label], // Include the selected label
+      parent: {
+        key: epicKey
       }
-    });
+    };
+
+    // Add assignee if provided
+    if (assigneeAccountId) {
+      issueFields.assignee = {
+        id: assigneeAccountId
+      };
+    }
+
+    // Add due date if provided
+    if (dueDate) {
+      issueFields.duedate = dueDate;
+    }
+
+    const issue = await jira.issues.createIssue({ fields: issueFields });
 
     // Notify the user that the ticket was created successfully
     await client.chat.postMessage({
@@ -332,6 +188,7 @@ app.view('create_jira_ticket', async ({ ack, body, view, client }) => {
     });
   }
 });
+
 
 // Start your app
 (async () => {
