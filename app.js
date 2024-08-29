@@ -4,6 +4,7 @@ const express = require('express'); // Import Express
 require('dotenv').config();
 
 const {defaultRequest} = require('./views/defaultRequest');
+const {infoSecRequest} = require('./views/InfoSecRequest');
 
 const jiraEmail = "hamzasumbal@gmail.com"; // Your Atlassian account email
 const jiraApiToken = process.env.JIRA_API_TOKEN; // The API token you generated
@@ -114,7 +115,14 @@ app.view('select_request_type', async ({ ack, body, view, client }) => {
 
   // Render the rest of the form based on the selected request type
   try {
-    await client.views.open(defaultRequest(body,view,requestType, requestTypeText));
+
+    if(requestType === "KAN-16")
+    {
+      await client.views.open(infoSecRequest(body,view,requestType, requestTypeText));
+    }
+    else{
+      await client.views.open(defaultRequest(body,view,requestType, requestTypeText));
+    }
   } catch (error) {
     console.error(error);
   }

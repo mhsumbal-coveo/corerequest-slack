@@ -1,4 +1,4 @@
-const defaultRequest = (body, view, requestType, requestTypeText) => {
+const infoSecRequest = (body, view, requestType, requestTypeText) => {
     return {
         trigger_id: body.trigger_id,
         view_id: view.id,
@@ -144,7 +144,7 @@ const defaultRequest = (body, view, requestType, requestTypeText) => {
                     },
                     optional: true
                 },
-/*                 {
+               /*  {
                     type: 'input',
                     block_id: 'assignee',
                     element: {
@@ -173,7 +173,33 @@ const defaultRequest = (body, view, requestType, requestTypeText) => {
                         text: 'Due Date'
                     },
                     optional: true
-                }
+                },
+                {
+                    type: 'input',
+                    block_id: 'opp_link_sf',
+                    element: {
+                        type: 'plain_text_input',
+                        action_id: 'opp_link_sf_input'
+                    },
+                    label: {
+                        type: 'plain_text',
+                        text: 'Opportunity Link Salesforce'
+                    },
+                    optional: true
+                },
+                {
+                    type: 'input',
+                    block_id: 'infosec_team_assistance',
+                    element: {
+                        type: 'plain_text_input',
+                        action_id: 'infosec_team_assistance_input'
+                    },
+                    label: {
+                        type: 'plain_text',
+                        text: 'Infosec Team Assistance (link to Infosec team ticket)'
+                    },
+                    optional: true
+                },
             ],
             private_metadata: requestType, // Store the selected Epic key
             submit: {
@@ -184,4 +210,4 @@ const defaultRequest = (body, view, requestType, requestTypeText) => {
     }
 }
 
-module.exports = { defaultRequest }
+module.exports = { infoSecRequest }
