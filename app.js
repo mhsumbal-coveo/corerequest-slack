@@ -133,6 +133,10 @@ app.view('create_jira_ticket', async ({ ack, body, view, client }) => {
   // Acknowledge the view_submission event
   await ack();
 
+  const UserInfo = await client.users.info({user: body.user.id});
+
+  console.log("username of user is: ", UserInfo.user.name);
+
   // Retrieve the values and handle missing fields by setting default values or handling undefined values
   const summary = view.state.values.summary?.summary_input?.value || 'No summary provided';
   const description = view.state.values.description?.description_input?.value || 'No description provided';
