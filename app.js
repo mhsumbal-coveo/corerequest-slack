@@ -6,7 +6,7 @@ require('dotenv').config();
 const {defaultRequest} = require('./views/defaultRequest');
 const {infoSecRequest} = require('./views/InfoSecRequest');
 
-const jiraEmail = "hamzasumbal@gmail.com"; // Your Atlassian account email
+const jiraEmail = "mhsumbal@coveo.com"; // Your Atlassian account email
 const jiraApiToken = process.env.JIRA_API_TOKEN; // The API token you generated
 
 // Initializes your app with your bot token and signing secret
@@ -17,7 +17,7 @@ const app = new App({
 
 // Initialize Jira client
 const jira = new Version3Client({
-    host: 'https://hamzasumbal.atlassian.net',
+    host: 'https://coveord.atlassian.net',
     authentication: {
         basic: {
             email: jiraEmail,
@@ -44,7 +44,7 @@ async function getAccountIdByEmail(email) {
 async function getEpics() {
   try {
     const epicIssues = await jira.issueSearch.searchForIssuesUsingJql({
-      jql: 'issuetype = Epic AND project = "KAN"', // Adjust the project key as needed
+      jql: 'issuetype = Epic AND project = "CTR24"', // Adjust the project key as needed
       fields: ['summary', 'key'], // Only fetch the summary and key fields
     });
 
@@ -156,7 +156,7 @@ app.view('create_jira_ticket', async ({ ack, body, view, client }) => {
 
     const issueFields = {
       project: {
-        key: 'KAN'
+        key: 'CTR24'
       },
       summary: summary,
       description: description,
@@ -172,7 +172,7 @@ app.view('create_jira_ticket', async ({ ack, body, view, client }) => {
       }
     };
 
-    // Add assignee if provided
+/*     // Add assignee if provided
     if (assigneeAccountId) {
       issueFields.assignee = {
         id: assigneeAccountId
@@ -182,7 +182,9 @@ app.view('create_jira_ticket', async ({ ack, body, view, client }) => {
     // Add due date if provided
     if (dueDate) {
       issueFields.duedate = dueDate;
-    }
+    } */
+
+    console.log(issueFields);
 
     const issue = await jira.issues.createIssue({ fields: issueFields });
 
@@ -192,7 +194,7 @@ app.view('create_jira_ticket', async ({ ack, body, view, client }) => {
       text: `Ticket created successfully: ${issue.key}`
     });
   } catch (error) {
-    console.error(error.message);
+    console.error(error);
     // Send the error message to the user on Slack
     await client.chat.postMessage({
       channel: body.user.id,
