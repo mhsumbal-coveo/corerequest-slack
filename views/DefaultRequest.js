@@ -28,7 +28,7 @@ const defaultRequest = (body, view, requestType, requestTypeText) => {
                     },
                     label: {
                         type: 'plain_text',
-                        text: 'Summary'
+                        text: 'Title'
                     },
                 },
                 {
