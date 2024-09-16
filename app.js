@@ -206,15 +206,14 @@ app.view('create_jira_ticket', async ({ ack, body, view, client }) => {
       parent: {
         key: epicKey
       },
-      // duedate: dueDate,
-      customfield_17260: opp_link_sf,
-      customfield_17262: aep_checklist,
+      duedate: dueDate,
     };
     
     if(epicKey === 'CTR24-3'){
       // Auto assign to Ravi if it's an InfoSec request
       assigneeAccountId = await getAccountIdByEmail('aarora@coveo.com'); //rravoory@coveo.com
       issueFields.labels = ['Question']; // Always a question
+      issueFields.customfield_17260 = opp_link_sf;
     }
     else if(epicKey === 'CTR24-6'){
       if(view.title.text === 'Front-End Demo Request'){
@@ -230,6 +229,7 @@ app.view('create_jira_ticket', async ({ ack, body, view, client }) => {
       issueFields.description = 'Beacon Script Delivery Date: ' + beacon_delivery + '\n' + 'Demo Delivery Date: ' + demo_delivery + '\n' +
       'Customer Website: ' + customer_website + '\n' + 'Catalog Shared: ' + catalog_shared + '\n\n' +
       + issueFields.description;
+      issueFields.customfield_17262 = aep_checklist;
     }
     else if(epicKey === 'CTR24-30'){
       issueFields.customfield_17259 = [{value: demo_environment.text.text}];
