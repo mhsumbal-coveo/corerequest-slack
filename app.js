@@ -3,7 +3,7 @@ const { Version3Client } = require('jira.js');
 const express = require('express'); // Import Express
 require('dotenv').config();
 
-const {defaultRequest} = require('./views/defaultRequest');
+const {defaultRequest} = require('./views/DefaultRequest');
 const {infoSecRequest} = require('./views/InfoSecRequest');
 const { AEPRequest } = require('./views/AEPRequest');
 const { CustomDemoRequest, FrontEndRequest, GDEImprovementRequest } = require('./views/CustomDemoRequest');
