@@ -5,6 +5,8 @@ require('dotenv').config();
 
 const {defaultRequest} = require('./views/defaultRequest');
 const {infoSecRequest} = require('./views/InfoSecRequest');
+const { AEPRequest } = require('./views/AEPRequest');
+const { CustomDemoRequest, FrontEndRequest, GDEImprovementRequest } = require('./views/CustomDemoRequest');
 
 const jiraEmail = "mhsumbal@coveo.com"; // Your Atlassian account email
 const jiraApiToken = process.env.JIRA_API_TOKEN; // The API token you generated
@@ -111,20 +113,41 @@ app.view('select_request_type', async ({ ack, body, view, client }) => {
 
   const requestType = view.state.values.request_type.request_type_select.selected_option.value;
   const requestTypeText = view.state.values.request_type.request_type_select.selected_option.text.text;
+  console.log("requestType: ", requestType);
   await ack();
 
   // Render the rest of the form based on the selected request type
   try {
-
-    if(requestType === "KAN-16")
-    {
-      await client.views.open(infoSecRequest(body,view,requestType, requestTypeText));
-    }
-    else{
-      await client.views.open(defaultRequest(body,view,requestType, requestTypeText));
+    switch (requestType) {
+      case "CTR24-3": // InfoSec Request
+        await client.views.open(infoSecRequest(body, view, requestType, requestTypeText));
+        break;
+      case "CTR24-6": // Custom Demo Request
+        await client.views.open(CustomDemoRequest(body, view, requestType, requestTypeText));
+        break;
+      case "CTR24-7": // AEP Request
+        await client.views.open(AEPRequest(body, view, requestType, requestTypeText));
+        break;
+      case "CTR24-30": // GDE Improvement / Feedback Request
+        await client.views.open(GDEImprovementRequest(body, view, requestType, requestTypeText));
+        break;
+      default:
+        await client.views.open(defaultRequest(body, view, requestType, requestTypeText));
+        break;
     }
   } catch (error) {
     console.error(error);
+  }
+});
+
+app.view('custom_demo_request', async ({ ack, body, view, client }) => {
+  const demo_help = view.state.values.demo_help.demo_help_select.selected_option.value;
+  await ack();
+  
+  if(demo_help === 'frontend'){
+    await client.views.open(FrontEndRequest(body, view, 'CTR24-6', 'Front End Request'));
+  } else if (demo_help === 'adminconsole'){
+    await client.views.open(defaultRequest(body, view, 'CTR24-6', 'Admin Console Request'));
   }
 });
 
@@ -134,29 +157,42 @@ app.view('create_jira_ticket', async ({ ack, body, view, client }) => {
   await ack();
 
   const UserInfo = await client.users.info({user: body.user.id});
-
+  const ReporterId = await getAccountIdByEmail(UserInfo.user.name + '@coveo.com');
   console.log("username of user is: ", UserInfo.user.name);
 
   // Retrieve the values and handle missing fields by setting default values or handling undefined values
   const summary = view.state.values.summary?.summary_input?.value || 'No summary provided';
-  const description = view.state.values.description?.description_input?.value || 'No description provided';
+  let description = view.state.values.description?.description_input?.value || 'No description provided';
   const priority = view.state.values.priority?.priority_input?.selected_option?.value || 'Medium';
   const assigneeEmail = view.state.values.assignee?.assignee_input?.value;
-  const label = view.state.values.label?.label_input?.selected_option?.value || 'Task';
-  const dueDate = view.state.values.due_date?.due_date_input?.selected_date; // Optional due date
+  let label = view.state.values.label?.label_input?.selected_option?.value || 'Task';
   const epicKey = view.private_metadata; // Retrieve the stored Epic key
+  const dueDate = view.state.values.due_date?.due_date_input?.selected_date || null; // Optional due date
+  const opp_link_sf = view.state.values.opp_link_sf?.opp_link_sf_input?.value || null;
+  const infosec_team_assistance = view.state.values.infosec_team_assistance?.infosec_team_assistance_input?.value || null;
+  const demo_environment = view.state.values.demo_environment?.demo_environment_select?.selected_option || null;
+  const customer_website = view.state.values.customer_website?.customer_website_url?.value || "Not provided";
+  const aep_checklist = view.state.values.aep_checklist?.aep_checklist_url?.value || null;
+  const beacon_delivery = view.state.values.beacon_delivery?.beacon_delivery_date?.selected_date || "Not provided";
+  const demo_delivery = view.state.values.demo_delivery?.demo_delivery_date?.selected_date || "Not provided";
+  const catalog_shared = view.state.values.catalog_shared?.catalog_shared_radio?.selected_option?.value || "No answer";
 
   try {
     let assigneeAccountId = null;
-
-    // Get the accountId for the assignee if the email is provided
     if (assigneeEmail) {
       assigneeAccountId = await getAccountIdByEmail(assigneeEmail);
     }
 
-    const issueFields = {
+    // Get the accountId for the assignee if the email is provided
+    // Assign all InfoSec requests to Ravi
+    
+    
+    let issueFields = {
       project: {
         key: 'CTR24'
+      },
+      reporter: {
+        id: ReporterId
       },
       summary: summary,
       description: description,
@@ -166,23 +202,38 @@ app.view('create_jira_ticket', async ({ ack, body, view, client }) => {
       priority: {
         name: priority.charAt(0).toUpperCase() + priority.slice(1)
       },
-      labels: [label], // Include the selected label
+      labels: [label],
       parent: {
         key: epicKey
-      }
+      },
+      duedate: dueDate,
     };
-
-/*     // Add assignee if provided
-    if (assigneeAccountId) {
-      issueFields.assignee = {
-        id: assigneeAccountId
-      };
+    
+    if(epicKey === 'CTR24-3'){
+      // Auto assign to Ravi if it's an InfoSec request
+      assigneeAccountId = await getAccountIdByEmail('aarora@coveo.com'); //rravoory@coveo.com
+      issueFields.labels = ['Question']; // Always a question
+      issueFields.customfield_17260 = opp_link_sf;
     }
-
-    // Add due date if provided
-    if (dueDate) {
-      issueFields.duedate = dueDate;
-    } */
+    else if(epicKey === 'CTR24-6'){
+      if(view.title.text === 'Front-End Demo Request'){
+        issueFields.description = "Front End Demo Request\n" + 
+        'Customer Website: ' + customer_website +
+        '\n\n' + issueFields.description;
+        issueFields.customfield_17259 = [{value: demo_environment.text.text}];
+      } else {
+        issueFields.description = "Admin Console Request\n\n" + issueFields.description;
+      }
+    }
+    else if(epicKey === 'CTR24-7'){
+      issueFields.description = 'Beacon Script Delivery Date: ' + beacon_delivery + '\n' + 'Demo Delivery Date: ' + demo_delivery + '\n' +
+      'Customer Website: ' + customer_website + '\n' + 'Catalog Shared: ' + catalog_shared + '\n\n' +
+      + issueFields.description;
+      issueFields.customfield_17262 = aep_checklist;
+    }
+    else if(epicKey === 'CTR24-30'){
+      issueFields.customfield_17259 = [{value: demo_environment.text.text}];
+    }
 
     console.log(issueFields);
 

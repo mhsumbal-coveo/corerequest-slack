@@ -10,14 +10,13 @@ const infoSecRequest = (body, view, requestType, requestTypeText) => {
                 text: 'Core Team Request'
             },
             blocks: [
-                {
-                    type: "section",
-                    fields: [
-                        {
-                            type: "mrkdwn",
-                            text: `*${requestTypeText}*`,
-                        }
-                    ]
+                    {
+                    "type": "header",
+                    "text": {
+                        "type": "plain_text",
+                        "text": `${requestTypeText}`,
+                        "emoji": true
+                    }
                 },
                 {
                     type: 'input',
@@ -28,7 +27,7 @@ const infoSecRequest = (body, view, requestType, requestTypeText) => {
                     },
                     label: {
                         type: 'plain_text',
-                        text: 'Summary'
+                        text: 'Company Name'
                     },
                 },
                 {
@@ -94,69 +93,69 @@ const infoSecRequest = (body, view, requestType, requestTypeText) => {
                     },
                     optional: true
                 },
-                {
-                    type: 'input',
-                    block_id: 'label',
-                    element: {
-                        type: 'static_select',
-                        action_id: 'label_input',
-                        options: [
-                            {
-                                text: {
-                                    type: 'plain_text',
-                                    text: 'Bug'
-                                },
-                                value: 'Bug'
-                            },
-                            {
-                                text: {
-                                    type: 'plain_text',
-                                    text: 'Question'
-                                },
-                                value: 'Question'
-                            },
-                            {
-                                text: {
-                                    type: 'plain_text',
-                                    text: 'Feature'
-                                },
-                                value: 'Feature'
-                            },
-                            {
-                                text: {
-                                    type: 'plain_text',
-                                    text: 'Task'
-                                },
-                                value: 'Task'
-                            },
-                            {
-                                text: {
-                                    type: 'plain_text',
-                                    text: 'New Demo'
-                                },
-                                value: 'New Demo'
-                            }
-                        ]
-                    },
-                    label: {
-                        type: 'plain_text',
-                        text: 'Label'
-                    },
-                    optional: true
-                },
-               /*  {
-                    type: 'input',
-                    block_id: 'assignee',
-                    element: {
-                        type: 'plain_text_input',
-                        action_id: 'assignee_input'
-                    },
-                    label: {
-                        type: 'plain_text',
-                        text: 'Assignee (Jira Email)'
-                    },
-                    optional: true
-                }, */
+                // {
+                //     type: 'input',
+                //     block_id: 'label',
+                //     element: {
+                //         type: 'static_select',
+                //         action_id: 'label_input',
+                //         options: [
+                //             {
+                //                 text: {
+                //                     type: 'plain_text',
+                //                     text: 'Bug'
+                //                 },
+                //                 value: 'Bug'
+                //             },
+                //             {
+                //                 text: {
+                //                     type: 'plain_text',
+                //                     text: 'Question'
+                //                 },
+                //                 value: 'Question'
+                //             },
+                //             {
+                //                 text: {
+                //                     type: 'plain_text',
+                //                     text: 'Feature'
+                //                 },
+                //                 value: 'Feature'
+                //             },
+                //             {
+                //                 text: {
+                //                     type: 'plain_text',
+                //                     text: 'Task'
+                //                 },
+                //                 value: 'Task'
+                //             },
+                //             {
+                //                 text: {
+                //                     type: 'plain_text',
+                //                     text: 'New Demo'
+                //                 },
+                //                 value: 'New Demo'
+                //             }
+                //         ]
+                //     },
+                //     label: {
+                //         type: 'plain_text',
+                //         text: 'Label'
+                //     },
+                //     optional: true
+                // },
+                /*  {
+                     type: 'input',
+                     block_id: 'assignee',
+                     element: {
+                         type: 'plain_text_input',
+                         action_id: 'assignee_input'
+                     },
+                     label: {
+                         type: 'plain_text',
+                         text: 'Assignee (Jira Email)'
+                     },
+                     optional: true
+                 }, */
                 {
                     type: 'input',
                     block_id: 'due_date',
@@ -172,34 +171,33 @@ const infoSecRequest = (body, view, requestType, requestTypeText) => {
                         type: 'plain_text',
                         text: 'Due Date'
                     },
-                    optional: true
                 },
                 {
                     type: 'input',
                     block_id: 'opp_link_sf',
                     element: {
-                        type: 'plain_text_input',
+                        type: 'url_text_input',
                         action_id: 'opp_link_sf_input'
                     },
                     label: {
                         type: 'plain_text',
-                        text: 'Opportunity Link Salesforce'
+                        text: 'Opportunity Link (Salesforce)'
                     },
                     optional: true
                 },
-                {
-                    type: 'input',
-                    block_id: 'infosec_team_assistance',
-                    element: {
-                        type: 'plain_text_input',
-                        action_id: 'infosec_team_assistance_input'
-                    },
-                    label: {
-                        type: 'plain_text',
-                        text: 'Infosec Team Assistance (link to Infosec team ticket)'
-                    },
-                    optional: true
-                },
+                // {
+                //     type: 'input',
+                //     block_id: 'infosec_team_assistance',
+                //     element: {
+                //         type: 'plain_text_input',
+                //         action_id: 'infosec_team_assistance_input'
+                //     },
+                //     label: {
+                //         type: 'plain_text',
+                //         text: 'Infosec Team Assistance (link to Infosec team ticket)'
+                //     },
+                //     optional: true
+                // },
             ],
             private_metadata: requestType, // Store the selected Epic key
             submit: {
