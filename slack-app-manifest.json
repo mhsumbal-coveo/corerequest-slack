@@ -11,7 +11,7 @@
             {
                 "command": "/corerequest",
                 "url": "http://18.204.88.116:3000/slack/events",
-                "description": "launch",
+                "description": "Create a Jira Request for Core SE Team",
                 "should_escape": false
             }
         ]
@@ -21,8 +21,9 @@
             "bot": [
                 "commands",
                 "chat:write",
-                "im:history",
-                "users:read"
+                "users:read",
+                "chat:write.public",
+                "im:write"
             ]
         }
     },
