@@ -240,9 +240,12 @@ app.view('create_jira_ticket', async ({ ack, body, view, client }) => {
     const issue = await jira.issues.createIssue({ fields: issueFields });
 
     // Notify the user that the ticket was created successfully
+
+    const coreRequestChannel = "C07TDAD6GBB";
+
     await client.chat.postMessage({
-      channel: body.user.id,
-      text: `Ticket created successfully: ${issue.key}`
+      channel: coreRequestChannel,
+      text: `Ticket created successfully "${issue.key}" by <@${UserInfo.user.name}> for ${issue.fields.summary}`
     });
   } catch (error) {
     console.error(error);
