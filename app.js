@@ -245,7 +245,7 @@ app.view('create_jira_ticket', async ({ ack, body, view, client }) => {
 
     await client.chat.postMessage({
       channel: coreRequestChannel,
-      text: `Ticket created successfully "${issue.key}" by <@${UserInfo.user.name}> for ${issue.fields.summary}`
+      text: `Ticket created successfully "${issue.key}" by <@${UserInfo.user.name}> for ${summary}`
     });
   } catch (error) {
     console.error(error);
