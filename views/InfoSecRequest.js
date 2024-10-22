@@ -36,12 +36,19 @@ const infoSecRequest = (body, view, requestType, requestTypeText) => {
                     element: {
                         type: 'plain_text_input',
                         action_id: 'description_input',
-                        multiline: true
+                        multiline: true,
                     },
                     label: {
                         type: 'plain_text',
                         text: 'Description'
                     },
+                },
+                {
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": "For security reasons, *please ensure that usernames, passwords, and other sensitive credentials are never included* in shared documents."
+                    }
                 },
                 {
                     type: 'input',

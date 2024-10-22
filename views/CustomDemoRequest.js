@@ -184,7 +184,7 @@ const FrontEndRequest = (body, view, requestType, requestTypeText) => {
                     },
                     "label": {
                         "type": "plain_text",
-                        "text": "Title"
+                        "text": "Customer Name"
                     }
                 },
                 {
