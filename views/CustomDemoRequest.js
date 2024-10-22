@@ -36,14 +36,28 @@ const CustomDemoRequest = (body, view, requestType, requestTypeText) => {
                     },
                     label: {
                         type: 'plain_text',
-                        text: 'What type of request is it?'
+                        text: 'Need help in Frontend or Admin Console?'
                     }
-                }
+                }           , {
+                    type: 'section',
+                    text: {
+                      type: 'mrkdwn',
+                      text: 'Click Next for more options'
+                    },
+                    accessory: {
+                      type: 'button',
+                      text: {
+                        type: 'plain_text',
+                        text: 'Next'
+                      },
+                      action_id: 'custom_demo_request'
+                    }
+                  },
             ],
             private_metadata: requestType,
             submit: {
                 type: 'plain_text',
-                text: 'Next'
+                text: 'Submit'
             }
         }
     }

@@ -93,11 +93,27 @@ app.command('/corerequest', async ({ command, ack, client, logger }) => {
                 type: 'plain_text',
                 text: 'What type of request is it?'
               }
-            }
+            },
+            {
+              type: 'section',
+              text: {
+                type: 'mrkdwn',
+                text: 'Click Next for more options'
+              },
+              accessory: {
+                type: 'button',
+                text: {
+                  type: 'plain_text',
+                  text: 'Next'
+                },
+                action_id: 'select_request_type'
+              }
+            },
+            
           ],
           submit: {
             type: 'plain_text',
-            text: 'Next'
+            text: 'Submit'
           }
         }
       });
@@ -107,48 +123,62 @@ app.command('/corerequest', async ({ command, ack, client, logger }) => {
   
 });
 
-// Handle view_submission event for the request type selection
-app.view('select_request_type', async ({ ack, body, view, client }) => {
-  // Acknowledge the view_submission event
+app.action('select_request_type', async ({ ack, body, client }) => {
+
+  await ack();
+
+  const view = body.view;
 
   const requestType = view.state.values.request_type.request_type_select.selected_option.value;
   const requestTypeText = view.state.values.request_type.request_type_select.selected_option.text.text;
-  console.log("requestType: ", requestType);
-  await ack();
 
-  // Render the rest of the form based on the selected request type
   try {
+    let updatedView;
+    
     switch (requestType) {
       case "CTR24-3": // InfoSec Request
-        await client.views.open(infoSecRequest(body, view, requestType, requestTypeText));
+        updatedView = infoSecRequest(body, view, requestType, requestTypeText);
         break;
       case "CTR24-6": // Custom Demo Request
-        await client.views.open(CustomDemoRequest(body, view, requestType, requestTypeText));
+        updatedView = CustomDemoRequest(body, view, requestType, requestTypeText);
         break;
       case "CTR24-7": // AEP Request
-        await client.views.open(AEPRequest(body, view, requestType, requestTypeText));
+        updatedView = AEPRequest(body, view, requestType, requestTypeText);
         break;
       case "CTR24-30": // GDE Improvement / Feedback Request
-        await client.views.open(GDEImprovementRequest(body, view, requestType, requestTypeText));
+        updatedView = GDEImprovementRequest(body, view, requestType, requestTypeText);
         break;
       default:
-        await client.views.open(defaultRequest(body, view, requestType, requestTypeText));
+        updatedView = defaultRequest(body, view, requestType, requestTypeText);
         break;
     }
+
+    updatedView = {...updatedView ,hash: view.hash, view_id: view.id}
+    // Use client.views.update instead of client.views.open
+    await client.views.update(updatedView);
+
   } catch (error) {
-    console.error(error);
+    console.error("Failed to update view:", error);
   }
 });
 
-app.view('custom_demo_request', async ({ ack, body, view, client }) => {
+
+app.action('custom_demo_request', async ({ ack, body, client }) => {
+  const view = body.view;
   const demo_help = view.state.values.demo_help.demo_help_select.selected_option.value;
   await ack();
-  
+  let updatedView;
   if(demo_help === 'frontend'){
-    await client.views.open(FrontEndRequest(body, view, 'CTR24-6', 'Front End Request'));
+    
+    updatedView = FrontEndRequest(body, view, 'CTR24-6', 'Front End Request');
+    /* await client.views.open(FrontEndRequest(body, view, 'CTR24-6', 'Front End Request')); */
   } else if (demo_help === 'adminconsole'){
-    await client.views.open(defaultRequest(body, view, 'CTR24-6', 'Admin Console Request'));
+    updatedView = defaultRequest(body, view, 'CTR24-6', 'Admin Console Request');
+    /* await client.views.open(defaultRequest(body, view, 'CTR24-6', 'Admin Console Request')); */
   }
+  updatedView = {...updatedView ,hash: view.hash, view_id: view.id}
+  await client.views.update(updatedView);
+  
 });
 
 // Handle view_submission event for the modal
