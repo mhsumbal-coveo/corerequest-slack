@@ -6,7 +6,10 @@ require('dotenv').config();
 const {defaultRequest} = require('./views/DefaultRequest');
 const {infoSecRequest} = require('./views/InfoSecRequest');
 const { AEPRequest } = require('./views/AEPRequest');
-const { CustomDemoRequest, FrontEndRequest, GDEImprovementRequest } = require('./views/CustomDemoRequest');
+const { CustomDemoRequest, FrontEndRequest, GDEImprovementRequest, AdminConsoleRequest } = require('./views/CustomDemoRequest');
+const { similarWebRequest } = require('./views/SimilarWebRequest');
+const { marketingEventRequest } = require('./views/MarketingEventRequest');
+const { partnerRequest } = require('./views/PartnerRequest');
 
 const jiraEmail = "mhsumbal@coveo.com"; // Your Atlassian account email
 const jiraApiToken = process.env.JIRA_API_TOKEN; // The API token you generated
@@ -75,7 +78,7 @@ app.command('/corerequest', async ({ command, ack, client, logger }) => {
         trigger_id: command.trigger_id,
         view: {
           type: 'modal',
-          callback_id: 'select_request_type',
+          callback_id: 'select_request_type_submit',
           title: {
             type: 'plain_text',
             text: 'Core Team Request'
@@ -126,11 +129,13 @@ app.command('/corerequest', async ({ command, ack, client, logger }) => {
 app.action('select_request_type', async ({ ack, body, client }) => {
 
   await ack();
-
+  console.log("hello")
   const view = body.view;
 
   const requestType = view.state.values.request_type.request_type_select.selected_option.value;
   const requestTypeText = view.state.values.request_type.request_type_select.selected_option.text.text;
+
+  console.log(requestType)
 
   try {
     let updatedView;
@@ -148,6 +153,18 @@ app.action('select_request_type', async ({ ack, body, client }) => {
       case "CTR24-30": // GDE Improvement / Feedback Request
         updatedView = GDEImprovementRequest(body, view, requestType, requestTypeText);
         break;
+      case "CTR24-10":
+        updatedView = similarWebRequest(body, view, requestType, requestTypeText);
+        break;
+
+      case "CTR24-9":
+        updatedView = marketingEventRequest(body, view, requestType, requestTypeText);
+        break;
+
+      case "CTR24-8":
+        updatedView = partnerRequest(body, view, requestType, requestTypeText);
+        break;  
+
       default:
         updatedView = defaultRequest(body, view, requestType, requestTypeText);
         break;
@@ -162,6 +179,18 @@ app.action('select_request_type', async ({ ack, body, client }) => {
   }
 });
 
+app.view('select_request_type_submit', async ({ ack, body, view, client }) => {
+
+    await ack({
+      response_action: 'errors',
+      errors: {
+        request_type: 'Please press the "Next" button before submitting.',
+      }
+    });
+    return;
+
+});
+
 
 app.action('custom_demo_request', async ({ ack, body, client }) => {
   const view = body.view;
@@ -173,7 +202,7 @@ app.action('custom_demo_request', async ({ ack, body, client }) => {
     updatedView = FrontEndRequest(body, view, 'CTR24-6', 'Front End Request');
     /* await client.views.open(FrontEndRequest(body, view, 'CTR24-6', 'Front End Request')); */
   } else if (demo_help === 'adminconsole'){
-    updatedView = defaultRequest(body, view, 'CTR24-6', 'Admin Console Request');
+    updatedView = AdminConsoleRequest(body, view, 'CTR24-6', 'Admin Console Request');
     /* await client.views.open(defaultRequest(body, view, 'CTR24-6', 'Admin Console Request')); */
   }
   updatedView = {...updatedView ,hash: view.hash, view_id: view.id}
@@ -192,6 +221,7 @@ app.view('create_jira_ticket', async ({ ack, body, view, client }) => {
 
   // Retrieve the values and handle missing fields by setting default values or handling undefined values
   const summary = view.state.values.summary?.summary_input?.value || 'No summary provided';
+  const orgid = view.state.values.orgid?.orgid_input?.value || '';
   let description = view.state.values.description?.description_input?.value || 'No description provided';
   const priority = view.state.values.priority?.priority_input?.selected_option?.value || 'Medium';
   const assigneeEmail = view.state.values.assignee?.assignee_input?.value;
@@ -207,6 +237,7 @@ app.view('create_jira_ticket', async ({ ack, body, view, client }) => {
   const demo_delivery = view.state.values.demo_delivery?.demo_delivery_date?.selected_date || "Not provided";
   const catalog_shared = view.state.values.catalog_shared?.catalog_shared_radio?.selected_option?.value || "No answer";
 
+  let AssigneeSlackUserID = "";
   try {
     let assigneeAccountId = null;
     if (assigneeEmail) {
@@ -239,31 +270,67 @@ app.view('create_jira_ticket', async ({ ack, body, view, client }) => {
       duedate: dueDate,
     };
     
-    if(epicKey === 'CTR24-3'){
+    if(epicKey === 'CTR24-3'){ // InfoSec Request
       // Auto assign to Ravi if it's an InfoSec request
-      assigneeAccountId = await getAccountIdByEmail('aarora@coveo.com'); //rravoory@coveo.com
+      assigneeAccountId = await getAccountIdByEmail('rravoory@coveo.com'); //rravoory@coveo.com
       issueFields.labels = ['Question']; // Always a question
       issueFields.customfield_17260 = opp_link_sf;
+      AssigneeSlackUserID = 'UD16A768Z'; //ravi
     }
-    else if(epicKey === 'CTR24-6'){
+
+    else if(epicKey === 'CTR24-6'){  // Custom Demo Request
       if(view.title.text === 'Front-End Demo Request'){
         issueFields.description = "Front End Demo Request\n" + 
         'Customer Website: ' + customer_website +
-        '\n\n' + issueFields.description;
+        '\n\n' + issueFields.description + "\n\n" + 'Organization ID: ' + orgid + '\n\n';
         issueFields.customfield_17259 = [{value: demo_environment.text.text}];
       } else {
         issueFields.description = "Admin Console Request\n\n" + issueFields.description;
+        issueFields.description = issueFields.description + 'Organization ID: ' + orgid + '\n\n';
       }
+      AssigneeSlackUserID = 'U03DT9P4Z5J'; //mhsumbal@coveo.com
     }
-    else if(epicKey === 'CTR24-7'){
+
+    else if(epicKey === 'CTR24-7'){  // AEP Request
       issueFields.description = 'Beacon Script Delivery Date: ' + beacon_delivery + '\n' + 'Demo Delivery Date: ' + demo_delivery + '\n' +
       'Customer Website: ' + customer_website + '\n' + 'Catalog Shared: ' + catalog_shared + '\n\n' +
       + issueFields.description;
       issueFields.customfield_17262 = aep_checklist;
+      AssigneeSlackUserID = 'U03DT9P4Z5J'; //mhsumbal@coveo.com
     }
-    else if(epicKey === 'CTR24-30'){
+
+    else if(epicKey === 'CTR24-30'){  // GDE Improvement / Feedback Request
       issueFields.customfield_17259 = [{value: demo_environment.text.text}];
+      AssigneeSlackUserID = 'U03DT9P4Z5J'; //mhsumbal@coveo.com
+
     }
+    
+    
+    else if (epicKey === "CTR24-10"){  // Similar Web Request
+      issueFields.description = "QPM/Similar Web Request\n" +
+      'Customer Website: ' + customer_website +
+      '\n\n' + issueFields.description;
+      assigneeAccountId = await getAccountIdByEmail('kklepp@coveo.com');
+      issueFields.assignee = {id : assigneeAccountId};
+      AssigneeSlackUserID = 'URBL5ELR4' //kklepp
+    }
+    
+    else if (epicKey === "CTR24-9"){  // Marketing Event Request
+      issueFields.description = "Marketing Event Request\n" +
+      'Event Date ' + dueDate +
+      '\n\n' + issueFields.description;
+      assigneeAccountId = await getAccountIdByEmail('kklepp@coveo.com'); 
+      issueFields.assignee = {id : assigneeAccountId};
+      AssigneeSlackUserID = 'URBL5ELR4' //kklepp
+    }
+
+
+    else if (epicKey === "CTR24-8"){  // Partner Request
+      assigneeAccountId = await getAccountIdByEmail('kklepp@coveo.com'); 
+      issueFields.assignee = {id : assigneeAccountId};
+      AssigneeSlackUserID = 'URBL5ELR4' //kklepp
+    }
+
 
     console.log(issueFields);
 
@@ -273,10 +340,33 @@ app.view('create_jira_ticket', async ({ ack, body, view, client }) => {
 
     const coreRequestChannel = "C07TDAD6GBB";
 
+    if(AssigneeSlackUserID){
+      await client.chat.postMessage({
+        channel: AssigneeSlackUserID,
+        text: `Hey, A ticket was assigned to you <https://coveord.atlassian.net/jira/software/c/projects/CTR24/list?selectedIssue=${issue.key}|${issue.key}> by <@${UserInfo.user.name}>\n
+      Summary: ${summary}\n
+      Description: ${description}\n
+      ${priority ? `Priority: ${priority}\n` : ""}
+      ${dueDate ? `Due Date: ${dueDate}\n` : ""}`
+      });
+    }
+
     await client.chat.postMessage({
       channel: coreRequestChannel,
-      text: `Ticket created successfully "${issue.key}" by <@${UserInfo.user.name}> for ${summary}`
+      text: `Ticket created successfully <https://coveord.atlassian.net/jira/software/c/projects/CTR24/list?selectedIssue=${issue.key}|${issue.key}> by <@${UserInfo.user.name}>\n
+    Summary: ${summary}\n
+    Description: ${description}\n
+    ${priority ? `Priority: ${priority}\n` : ""}
+    ${dueDate ? `Due Date: ${dueDate}\n` : ""}`
     });
+
+
+    await client.chat.postMessage({
+      channel: body.user.id,
+      text: `Ticket created successfully <https://coveord.atlassian.net/jira/software/c/projects/CTR24/list?selectedIssue=${issue.key}|${issue.key}>`
+    });
+
+
   } catch (error) {
     console.error(error);
     // Send the error message to the user on Slack

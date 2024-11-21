@@ -1,5 +1,10 @@
 const infoSecRequest = (body, view, requestType, requestTypeText) => {
     return {
+        type : "modal",
+        title: {
+            type: "plain_text",
+            text: "InfoSec Request"
+          },
         trigger_id: body.trigger_id,
         view_id: view.id,
         view: {
@@ -214,5 +219,6 @@ const infoSecRequest = (body, view, requestType, requestTypeText) => {
         }
     }
 }
+
 
 module.exports = { infoSecRequest }
