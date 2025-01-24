@@ -139,13 +139,10 @@ app.command('/corerequest', async ({ command, ack, client, logger }) => {
 app.action('select_request_type', async ({ ack, body, client }) => {
 
   await ack();
-  console.log("hello")
   const view = body.view;
 
   const requestType = view.state.values.request_type.request_type_select.selected_option.value;
   const requestTypeText = view.state.values.request_type.request_type_select.selected_option.text.text;
-
-  console.log(requestType)
 
   try {
     let updatedView;
@@ -345,8 +342,6 @@ app.view('create_jira_ticket', async ({ ack, body, view, client }) => {
       AssigneeSlackUserID = 'URBL5ELR4' //kklepp
     }
 
-
-    console.log(issueFields);
 
     const issue = await jira.issues.createIssue({ fields: issueFields });
 
