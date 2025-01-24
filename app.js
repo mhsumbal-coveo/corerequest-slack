@@ -14,6 +14,16 @@ const { partnerRequest } = require('./views/PartnerRequest');
 const jiraEmail = "mhsumbal@coveo.com"; // Your Atlassian account email
 const jiraApiToken = process.env.JIRA_API_TOKEN; // The API token you generated
 
+
+const InfoSecEpicKey = "CTR24-3";
+const CustomDemoEpicKey = "CTR24-6";
+const AEPRequestEpicKey = "CTR24-7";
+const GDEImprovementEpicKey = "CTR24-30";
+const SimilarWebEpicKey = "CTR24-10";
+const MarketingEventEpicKey = "CTR24-9";
+const PartnerRequestEpicKey = "CTR24-8";
+
+
 // Initializes your app with your bot token and signing secret
 const app = new App({
     token: process.env.SLACK_BOT_TOKEN,
@@ -141,27 +151,27 @@ app.action('select_request_type', async ({ ack, body, client }) => {
     let updatedView;
     
     switch (requestType) {
-      case "CTR24-3": // InfoSec Request
+      case InfoSecEpicKey: // InfoSec Request
         updatedView = infoSecRequest(body, view, requestType, requestTypeText);
         break;
-      case "CTR24-6": // Custom Demo Request
+      case CustomDemoEpicKey: // Custom Demo Request
         updatedView = CustomDemoRequest(body, view, requestType, requestTypeText);
         break;
-      case "CTR24-7": // AEP Request
+      case AEPRequestEpicKey: // AEP Request
         updatedView = AEPRequest(body, view, requestType, requestTypeText);
         break;
-      case "CTR24-30": // GDE Improvement / Feedback Request
+      case GDEImprovementEpicKey: // GDE Improvement / Feedback Request
         updatedView = GDEImprovementRequest(body, view, requestType, requestTypeText);
         break;
-      case "CTR24-10":
+      case SimilarWebEpicKey:
         updatedView = similarWebRequest(body, view, requestType, requestTypeText);
         break;
 
-      case "CTR24-9":
+      case MarketingEventEpicKey:
         updatedView = marketingEventRequest(body, view, requestType, requestTypeText);
         break;
 
-      case "CTR24-8":
+      case PartnerRequestEpicKey:
         updatedView = partnerRequest(body, view, requestType, requestTypeText);
         break;  
 
@@ -270,7 +280,7 @@ app.view('create_jira_ticket', async ({ ack, body, view, client }) => {
       duedate: dueDate,
     };
     
-    if(epicKey === 'CTR24-3'){ // InfoSec Request
+    if(epicKey === InfoSecEpicKey){ // InfoSec Request
       // Auto assign to Ravi if it's an InfoSec request
       assigneeAccountId = await getAccountIdByEmail('rravoory@coveo.com'); //rravoory@coveo.com
       issueFields.labels = ['Question']; // Always a question
@@ -279,7 +289,7 @@ app.view('create_jira_ticket', async ({ ack, body, view, client }) => {
       AssigneeSlackUserID = 'UD16A768Z'; //ravi
     }
 
-    else if(epicKey === 'CTR24-6'){  // Custom Demo Request
+    else if(epicKey === CustomDemoEpicKey){  // Custom Demo Request
       if(view.title.text === 'Front-End Demo Request'){
         issueFields.description = "Front End Demo Request\n" + 
         'Customer Website: ' + customer_website +
@@ -292,25 +302,25 @@ app.view('create_jira_ticket', async ({ ack, body, view, client }) => {
       AssigneeSlackUserID = 'U03DT9P4Z5J'; //mhsumbal@coveo.com
     }
 
-    else if(epicKey === 'CTR24-7'){  // AEP Request
+    else if(epicKey === AEPRequestEpicKey){  // AEP Request
       assigneeAccountId = await getAccountIdByEmail('mhsumbal@coveo.com'); //mhsumbal@coveo.com
       issueFields.description = 'Beacon Script Delivery Date: ' + beacon_delivery + '\n' + 'Demo Delivery Date: ' + demo_delivery + '\n' +
       'Customer Website: ' + customer_website + '\n' + 'Catalog Shared: ' + catalog_shared + '\n\n' +
-      + issueFields.description;
+      + description;
       issueFields.customfield_17262 = aep_checklist;
       AssigneeSlackUserID = 'U03DT9P4Z5J'; //mhsumbal@coveo.com
       issueFields.assignee = {id : assigneeAccountId};
 
     }
 
-    else if(epicKey === 'CTR24-30'){  // GDE Improvement / Feedback Request
+    else if(epicKey === GDEImprovementEpicKey){  // GDE Improvement / Feedback Request
       issueFields.customfield_17259 = [{value: demo_environment.text.text}];
       AssigneeSlackUserID = 'U03DT9P4Z5J'; //mhsumbal@coveo.com
 
     }
     
     
-    else if (epicKey === "CTR24-10"){  // Similar Web Request
+    else if (epicKey === SimilarWebEpicKey){  // Similar Web Request
       issueFields.description = "QPM/Similar Web Request\n" +
       'Customer Website: ' + customer_website +
       '\n\n' + issueFields.description;
@@ -319,7 +329,7 @@ app.view('create_jira_ticket', async ({ ack, body, view, client }) => {
       AssigneeSlackUserID = 'URBL5ELR4' //kklepp
     }
     
-    else if (epicKey === "CTR24-9"){  // Marketing Event Request
+    else if (epicKey === MarketingEventEpicKey){  // Marketing Event Request
       issueFields.description = "Marketing Event Request\n" +
       'Event Date ' + dueDate +
       '\n\n' + issueFields.description;
@@ -329,7 +339,7 @@ app.view('create_jira_ticket', async ({ ack, body, view, client }) => {
     }
 
 
-    else if (epicKey === "CTR24-8"){  // Partner Request
+    else if (epicKey === PartnerRequestEpicKey){  // Partner Request
       assigneeAccountId = await getAccountIdByEmail('kklepp@coveo.com'); 
       issueFields.assignee = {id : assigneeAccountId};
       AssigneeSlackUserID = 'URBL5ELR4' //kklepp
@@ -344,10 +354,31 @@ app.view('create_jira_ticket', async ({ ack, body, view, client }) => {
 
     const coreRequestChannel = "C07TDAD6GBB";
 
+    let epicName = "Others";
+
+    if(epicKey === InfoSecEpicKey){
+      epicName = "InfoSec Request";
+    } else if(epicKey === CustomDemoEpicKey){
+      epicName = "Custom Demo Request";
+    } else if(epicKey === AEPRequestEpicKey){
+      epicName = "AEP Request";
+    } else if(epicKey === GDEImprovementEpicKey){
+      epicName = "GDE Improvement / Feedback Request";
+    } else if(epicKey === SimilarWebEpicKey){
+      epicName = "Similar Web Request";
+    } else if(epicKey === MarketingEventEpicKey){
+      epicName = "Marketing Event Request";
+    } else if(epicKey === PartnerRequestEpicKey){
+      epicName = "Partner Request";
+    }
+
+
+
     if(AssigneeSlackUserID){
       await client.chat.postMessage({
         channel: AssigneeSlackUserID,
         text: `Hey, A ticket was assigned to you <https://coveord.atlassian.net/jira/software/c/projects/CTR24/list?selectedIssue=${issue.key}|${issue.key}> by <@${UserInfo.user.name}>\n
+      Epic: ${epicName}\n
       Summary: ${summary}\n
       Description: ${description}\n
       ${priority ? `Priority: ${priority}\n` : ""}
@@ -357,7 +388,8 @@ app.view('create_jira_ticket', async ({ ack, body, view, client }) => {
 
     await client.chat.postMessage({
       channel: coreRequestChannel,
-      text: `Ticket created successfully <https://coveord.atlassian.net/jira/software/c/projects/CTR24/list?selectedIssue=${issue.key}|${issue.key}> by <@${UserInfo.user.name}>\n
+      text: `Ticket created successfully <https://coveord.atlassian.net/jira/software/c/projects/CTR24/list?selectedIssue=${issue.key}|${issue.key}> by <@${UserInfo.user.name}>\n 
+    Epic: ${epicName}\n 
     Summary: ${summary}\n
     Description: ${description}\n
     ${priority ? `Priority: ${priority}\n` : ""}
