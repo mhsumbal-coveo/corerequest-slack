@@ -275,6 +275,7 @@ app.view('create_jira_ticket', async ({ ack, body, view, client }) => {
       assigneeAccountId = await getAccountIdByEmail('rravoory@coveo.com'); //rravoory@coveo.com
       issueFields.labels = ['Question']; // Always a question
       issueFields.customfield_17260 = opp_link_sf;
+      issueFields.assignee = {id : assigneeAccountId};
       AssigneeSlackUserID = 'UD16A768Z'; //ravi
     }
 
@@ -292,11 +293,14 @@ app.view('create_jira_ticket', async ({ ack, body, view, client }) => {
     }
 
     else if(epicKey === 'CTR24-7'){  // AEP Request
+      assigneeAccountId = await getAccountIdByEmail('mhsumbal@coveo.com'); //mhsumbal@coveo.com
       issueFields.description = 'Beacon Script Delivery Date: ' + beacon_delivery + '\n' + 'Demo Delivery Date: ' + demo_delivery + '\n' +
       'Customer Website: ' + customer_website + '\n' + 'Catalog Shared: ' + catalog_shared + '\n\n' +
       + issueFields.description;
       issueFields.customfield_17262 = aep_checklist;
       AssigneeSlackUserID = 'U03DT9P4Z5J'; //mhsumbal@coveo.com
+      issueFields.assignee = {id : assigneeAccountId};
+
     }
 
     else if(epicKey === 'CTR24-30'){  // GDE Improvement / Feedback Request
