@@ -22,7 +22,7 @@ const GDEImprovementEpicKey = "CTR24-30";
 const SimilarWebEpicKey = "CTR24-10";
 const MarketingEventEpicKey = "CTR24-9";
 const PartnerRequestEpicKey = "CTR24-8";
-
+const OthersEpicKey = "CTR24-31";
 
 // Initializes your app with your bot token and signing secret
 const app = new App({
@@ -337,6 +337,11 @@ app.view('create_jira_ticket', async ({ ack, body, view, client }) => {
 
 
     else if (epicKey === PartnerRequestEpicKey){  // Partner Request
+      assigneeAccountId = await getAccountIdByEmail('kklepp@coveo.com'); 
+      issueFields.assignee = {id : assigneeAccountId};
+      AssigneeSlackUserID = 'URBL5ELR4' //kklepp
+    }
+    else if (epicKey === OthersEpicKey){  // Others
       assigneeAccountId = await getAccountIdByEmail('kklepp@coveo.com'); 
       issueFields.assignee = {id : assigneeAccountId};
       AssigneeSlackUserID = 'URBL5ELR4' //kklepp
