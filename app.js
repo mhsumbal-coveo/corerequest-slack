@@ -330,9 +330,9 @@ app.view('create_jira_ticket', async ({ ack, body, view, client }) => {
       issueFields.description = "Marketing Event Request\n" +
       'Event Date ' + dueDate +
       '\n\n' + issueFields.description;
-      assigneeAccountId = await getAccountIdByEmail('kklepp@coveo.com'); 
+      assigneeAccountId = await getAccountIdByEmail('rreffner@coveo.com'); 
       issueFields.assignee = {id : assigneeAccountId};
-      AssigneeSlackUserID = 'URBL5ELR4' //kklepp
+      AssigneeSlackUserID = 'U08719EP9T3' //Rich
     }
 
 
