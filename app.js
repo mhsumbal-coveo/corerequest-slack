@@ -1,4 +1,4 @@
-const { App } = require('@slack/bolt');
+const { App, ExpressReceiver } = require('@slack/bolt');
 const { Version3Client } = require('jira.js');
 const express = require('express'); // Import Express
 require('dotenv').config();
@@ -13,7 +13,7 @@ const { partnerRequest } = require('./views/PartnerRequest');
 
 const jiraEmail = "mhsumbal@coveo.com"; // Your Atlassian account email
 const jiraApiToken = process.env.JIRA_API_TOKEN; // The API token you generated
-
+const PORT = process.env.PORT || 3000; // Single port for both Slack & Express
 
 const InfoSecEpicKey = "CTR24-3";
 const CustomDemoEpicKey = "CTR24-6";
@@ -24,11 +24,18 @@ const MarketingEventEpicKey = "CTR24-9";
 const PartnerRequestEpicKey = "CTR24-8";
 const OthersEpicKey = "CTR24-31";
 
-// Initializes your app with your bot token and signing secret
-const app = new App({
-    token: process.env.SLACK_BOT_TOKEN,
+// Initialize ExpressReceiver
+const receiver = new ExpressReceiver({
     signingSecret: process.env.SLACK_SIGNING_SECRET
 });
+
+const app = new App({
+    token: process.env.SLACK_BOT_TOKEN,
+    receiver 
+});
+
+
+const expressApp = receiver.app;
 
 // Initialize Jira client
 const jira = new Version3Client({
@@ -143,7 +150,6 @@ app.action('select_request_type', async ({ ack, body, client }) => {
 
   const requestType = view.state.values.request_type.request_type_select.selected_option.value;
   const requestTypeText = view.state.values.request_type.request_type_select.selected_option.text.text;
-
   try {
     let updatedView;
     
@@ -414,8 +420,16 @@ app.view('create_jira_ticket', async ({ ack, body, view, client }) => {
 });
 
 
-// Start your app
-(async () => {
-  await app.start(process.env.PORT || 3000);
-  console.log('⚡️ Bolt app is running!');
-})();
+expressApp.get('/checkstatus', async (req, res) => {
+  console.log('Checking server status...');
+
+  res.send('Server is running smoothly! ✅');
+
+      checkStatus();
+});
+
+
+
+const server = expressApp.listen(PORT, async () => {
+  console.log(`🚀 App is running on port ${PORT}`);
+});
