@@ -408,7 +408,12 @@ app.view('create_jira_ticket', async ({ ack, body, view, client }) => {
     // Send the error message to the user on Slack
     await client.chat.postMessage({
       channel: body.user.id,
-      text: `There was an error creating the ticket: ${error.message}`
+      text: `There was an error creating the ticket: ${error.message} \n Please contact <@Hamza> for assistance.`
+    });
+
+    await client.chat.postMessage({
+      channel: "U03DT9P4Z5J", // Hamza's Slack ID
+      text: `There was an error creating the ticket: ${error.message} by <@${UserInfo.user.name}>`
     });
   }
 });
