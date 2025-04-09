@@ -83,6 +83,14 @@ const CustomDemoRequest = (body, view, requestType, requestTypeText) => {
                                 },
                                 "value": "adminconsole"
                             },
+                            {
+                                "text": {
+                                    "type": "plain_text",
+                                    "text": "Admin Console & Front-End",
+                                    "emoji": true
+                                },
+                                "value": "adminconsolefrontend"
+                            },
                         ],
                     },
                     label: {

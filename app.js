@@ -208,9 +208,11 @@ app.action('custom_demo_request', async ({ ack, body, client }) => {
     
     updatedView = FrontEndRequest(body, view, 'CTR24-6', 'Front End Request');
     /* await client.views.open(FrontEndRequest(body, view, 'CTR24-6', 'Front End Request')); */
-  } else if (demo_help === 'adminconsole'){
+  } else if (demo_help === 'adminconsole' ){
     updatedView = AdminConsoleRequest(body, view, 'CTR24-6', 'Admin Console Request');
     /* await client.views.open(defaultRequest(body, view, 'CTR24-6', 'Admin Console Request')); */
+  } else if (demo_help === 'adminconsolefrontend'){
+    updatedView = FrontEndRequest(body, view, 'CTR24-6', 'Admin Console + Front End Request');
   }
   updatedView = {...updatedView ,hash: view.hash, view_id: view.id}
   await client.views.update(updatedView);
@@ -294,7 +296,7 @@ app.view('create_jira_ticket', async ({ ack, body, view, client }) => {
         issueFields.customfield_17259 = [{value: demo_environment.text.text}];
       } else {
         issueFields.description = "Admin Console Request\n\n" + issueFields.description;
-        issueFields.description = issueFields.description + 'Organization ID: ' + orgid + '\n\n';
+        issueFields.description = issueFields.description + "\n\n" + 'Organization ID: ' + orgid + '\n\n';
       }
       AssigneeSlackUserID = 'U03DT9P4Z5J'; //mhsumbal@coveo.com
     }
@@ -303,7 +305,7 @@ app.view('create_jira_ticket', async ({ ack, body, view, client }) => {
       assigneeAccountId = await getAccountIdByEmail('mhsumbal@coveo.com'); //mhsumbal@coveo.com
       issueFields.description = 'Beacon Script Delivery Date: ' + beacon_delivery + '\n' + 'Demo Delivery Date: ' + demo_delivery + '\n' +
       'Customer Website: ' + customer_website + '\n' + 'Catalog Shared: ' + catalog_shared + '\n\n' +
-      + description;
+      + issueFields.description;
       issueFields.customfield_17262 = aep_checklist;
       AssigneeSlackUserID = 'U03DT9P4Z5J'; //mhsumbal@coveo.com
       issueFields.assignee = {id : assigneeAccountId};
