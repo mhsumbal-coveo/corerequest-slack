@@ -1,4 +1,6 @@
-const {SIMILARWEB_API_ENDPOINT, TOTAL_TRAFFIC_ENGAGEMENT_VISITS, TOTAL_TRAFFIC_BOUNCE_RATE} = require("./ApiEndpoints");
+const SIMILARWEB_API_ENDPOINT = "https://api.similarweb.com/v1/website/"
+const TOTAL_TRAFFIC_ENGAGEMENT_VISITS = "total-traffic-and-engagement/visits"
+const TOTAL_TRAFFIC_BOUNCE_RATE = "total-traffic-and-engagement/bounce-rate"
 
 
 function getAverage(arrayOfNumbers) {
